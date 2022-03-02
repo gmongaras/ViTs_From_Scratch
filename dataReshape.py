@@ -12,8 +12,8 @@ def main():
     savePath = "data"
     
     # The width and height of the new image
-    width = 300
-    height = 300
+    width = 256
+    height = 256
     
     
     # Iterate over all folders in the image directory

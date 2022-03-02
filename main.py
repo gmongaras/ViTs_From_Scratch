@@ -10,15 +10,16 @@ import torch
 
 def main():
     # Hyperparameters
-    #
+    pathWidth = 16              # The Width of each image patch
+    pathHeight = 16             # The height of each image patch
     
     
     # Other parameters
     pathName = "data"           # Path to load data from
     numImages = 5               # Number of images to load from each class
                                 # (use -1 to load all images)
-    imgWidth = 300              # Width of each image
-    imgHeight = 300             # Height of each image
+    imgWidth = 256              # Width of each image
+    imgHeight = 256             # Height of each image
     resize = False              # True to resize the images, False otherwise
     
     
