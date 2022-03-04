@@ -12,6 +12,8 @@ def main():
     # Hyperparameters
     pathWidth = 16              # The Width of each image patch
     pathHeight = 16             # The height of each image patch
+    numSteps = 1000             # Number of steps to train the model
+    batchSize = 5               # Size of each minibatch
     
     
     # Other parameters
@@ -85,9 +87,10 @@ def main():
     ### Train the Model ###
     
     # Create a ViT Model
-    model = ViT()
+    model = ViT(pathWidth, pathHeight)
     
     # Train the model
+    model.train(images, labels, numSteps, batchSize)
 
 
 
