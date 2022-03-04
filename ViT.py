@@ -32,6 +32,30 @@ class ViT(nn.Module):
         
         # The optimizer for this model
         #self.optimizer = optim.Adam(self.parameters())
+        
+    
+    
+    # Positionally encode the images after flatenning
+    # Input:
+    #   Array of size (N+1, I)
+    #   - N = number of patches
+    #   - I = flattened size of each patch
+    # Outputs:
+    #   Array of same shape as inptu with positional encodings
+    def positonallyEncode(self, x_flat):
+        # Make sure the dimensions are correct
+        assert len(x_flat.shape) == 2
+        
+        # Get the positional encodings angle
+        dModel = x_flat.shape[1]
+        if hasattr(self, 'posEncAngle') == False:
+            self.posEncAngle = torch.FloatTensor([[pos/(10000**((2*i)/dModel)) for pos in range(0, dModel)] for i in range(0, x_flat.shape[0])])
+        
+        # Add the positional encodings to the array
+        x_flat[:, 0::2] = torch.sin(self.posEncAngle[:, 0::2])
+        x_flat[:, 1::2] = torch.cos(self.posEncAngle[:, 1::2])
+        
+        return x_flat
     
     
     
@@ -46,9 +70,13 @@ class ViT(nn.Module):
     #   Array of size (B, N, I)
     #   - B = batch size
     #   - N = number of patches where N = ((HW)/P^2)
+    #     - The extra 1 comes from the class token
     #   - C = channels in an image (3 is RGB)
     #   - I = flattened patch size where I = CP^2
     def getPatches(self, x):
+        # Make sure the dimensions are correct
+        assert len(x[0].shape) == 3
+        
         # Calculate the number of patches and flattened patch size
         N = (x[0].shape[0]*x[0].shape[1])/(self.patchWidth*self.patchHeight)
         I = x[0].shape[2]*self.patchWidth*self.patchHeight
@@ -60,6 +88,9 @@ class ViT(nn.Module):
         for image in range(0, len(x)):
             # Holds an array of patches for the image
             patchArr = []
+            
+            # Add the class token to the beginning of the patch array
+            patchArr.append(torch.FloatTensor(np.random.uniform(low=0, high=x[0].shape[0], size=(I))))
             
             # Iterate over all patches
             for i in range(0, x[0].shape[0], self.patchWidth):
@@ -73,8 +104,11 @@ class ViT(nn.Module):
                     # Add the patch to the array of patches
                     patchArr.append(patch_flat)
             
-            # Convert the patch array to a tensor and store it
-            x_reshaped.append(torch.stack(patchArr))
+            # Convert the patch array to a tensor
+            patchArr_T = torch.stack(patchArr)
+            
+            # Positionally encode the patch array and store it
+            x_reshaped.append(self.positonallyEncode(patchArr_T))
 
         # Convert the array to a tensor and return it
         return torch.stack(x_reshaped)
