@@ -7,13 +7,24 @@ from PIL import Image
 import torch
 
 
+device = torch.device('cpu')
+if torch.cuda.is_available():
+    device = torch.device('cuda')
+torch.autograd.set_detect_anomaly(True)
+
+
 
 def main():
     # Hyperparameters
-    pathWidth = 16              # The Width of each image patch
-    pathHeight = 16             # The height of each image patch
+    patchWidth = 16             # The Width of each image patch
+    patchHeight = 16            # The height of each image patch
     numSteps = 1000             # Number of steps to train the model
-    batchSize = 5               # Size of each minibatch
+    batchSize = 10              # Size of each minibatch
+    numBlocks = 2               # Number of transformer blocks
+    numHeads = 2                # Number of attention heads to use
+    keySize = 16                # Size of each key matrix
+    querySize = keySize         # Size of each query matrix
+    valueSize = 16              # Size of each value matrix
     
     
     # Other parameters
@@ -33,13 +44,19 @@ def main():
     images = []
     
     # Dictionary to convert the classes to a number
-    classToNum = {"cat": 1, "butterfly": 2, "chicken": 3, "cow": 4, "dog": 5, "elephant": 6, "horse": 7, "sheep": 8, "spider": 9, "squirrel": 10}
+    classToNum = {"cat": 0, "butterfly": 1, "chicken": 2, "cow": 3, "dog": 4, "elephant": 5, "horse": 6, "sheep": 7, "spider": 8, "squirrel": 9}
     
     # Holds all image labels
     labels = []
     
+    # Holds the total number of classes
+    numClasses = 0
+    
     # Iterate over all folders in the image directory
     for path in os.listdir(pathName):
+        # Increase the number of classes
+        numClasses += 1
+        
         # Construct the path
         dirPath = os.path.join(pathName, path)
         
@@ -65,7 +82,7 @@ def main():
             img = np.array(img)
             
             # Convert the image to a tensor
-            img = torch.tensor(img)
+            img = torch.tensor(img, device=device)
             
             # Store the image in a list of images
             images.append(img)
@@ -87,7 +104,7 @@ def main():
     ### Train the Model ###
     
     # Create a ViT Model
-    model = ViT(pathWidth, pathHeight)
+    model = ViT(patchWidth, patchHeight, numBlocks, keySize, querySize, valueSize, numHeads, numClasses)
     
     # Train the model
     model.train(images, labels, numSteps, batchSize)
