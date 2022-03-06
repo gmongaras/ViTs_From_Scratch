@@ -1,4 +1,5 @@
 import re
+from tkinter.tix import Y_REGION
 import torch
 from torch import nn
 from torch import optim
@@ -284,7 +285,11 @@ class ViT(nn.Module):
     #   Y - The batch of labels for each image
     #   numSteps - Number of steps to train the model
     #   batchSize - The size of each batch
-    def train(self, x, Y, numSteps, batchSize):
+    #   fileSaveName - name of file to save model to
+    #   stepsToSave - Number of steps before saving the model
+    #   saveAtBest - Whether the file should only be saved if
+    #                it's the new best model
+    def train(self, x, Y, numSteps, batchSize, fileSaveName, stepsToSave, saveAtBest):
         # Convert the images to arrays of flattened patches
         x_reshaped = self.getPatches(x)
         
@@ -298,8 +303,11 @@ class ViT(nn.Module):
         x_batches = torch.split(x_reshaped, batchSize)
         Y_batches = torch.split(Y, batchSize)
         
+        # The best lost out of all steps
+        bestLoss = np.inf
+        
         # Train the model for numSteps number of steps
-        for step in range(0, numSteps):
+        for step in range(1, numSteps+1):
             # The total loss over batches
             totalLoss = 0
             
@@ -344,3 +352,93 @@ class ViT(nn.Module):
             print(f"Total loss: {totalLoss}")
             print(f"Actual Labels: {Y_batch.detach().numpy()}")
             print(f"Predictions: {classPreds.detach().numpy()}")
+            print()
+            
+            # Check if the model should be saved every `stepsToSave` steps
+            if step%stepsToSave == 0:
+                if saveAtBest == True:
+                    if totalLoss < bestLoss:
+                        bestLoss = totalLoss
+                        print("Saving Model\n")
+                        self.saveModel(fileSaveName)
+                else:
+                    print("Saving Model\n")
+                    self.saveModel(fileSaveName)
+    
+    
+    
+    # Get a prediction from the network on a batch of data
+    # Inputs:
+    #   x - The batch of images to classify
+    #   Y - The classes of the images we want to classify
+    #       (this variable defaults to None which won't produce a loss)
+    def forward(self, x, Y=None):
+        # Convert the images to arrays of flattened patches
+        x_reshaped = self.getPatches(x)
+        
+        # Shuffle the inputs and labels
+        shuffleArr = [i for i in range(0, x_reshaped.shape[0])]
+        random.shuffle(shuffleArr)
+        x_reshaped = x_reshaped[shuffleArr]
+        Y = torch.tensor(Y, dtype=torch.long, device=device)[shuffleArr]
+        
+        
+        
+        # Send the images through the transformer blocks
+        trans = x_reshaped
+        for block in range(0, len(self.transformerBlocks)):
+            trans = self.transformerBlocks[block](trans)
+        
+        # Get the softmax predictions from the network
+        linear1 = self.linear1(trans[:, 0])
+        linear2 = self.linear2(linear1)
+        soft = self.softmax(linear2)
+        
+        # Get the class prediction
+        classPreds = torch.argmax(soft, dim=-1)
+        
+        # If labels were given, get the loss
+        if Y != None:
+            # One hot encode the labels
+            Y_oneHot = nn.functional.one_hot(Y, num_classes=soft.shape[-1])
+            
+            # Get the loss for the batch
+            loss = self.CrossEntropyLoss(Y_oneHot, soft).mean()
+        
+            # Return the predictions and loss
+            return classPreds.detach().numpy(), loss.detach().item()
+
+        # Return the predictions
+        return classPreds.detach().numpy()
+    
+    
+    # Save a model to the specified path name
+    # Input:
+    #   fileName - The name of the file to save the model to
+    def saveModel(self, fileName):
+        # Get the last separator in the filename
+        dirName = "/".join(fileName.split("/")[0:-1])
+    
+        # If the directory doesn't exist, create it
+        try:
+            if (not os.path.isdir(dirName) and dirName != ''):
+                os.makedirs(dirName, exist_ok=True)
+        
+            torch.save(self.state_dict(), fileName)
+        
+        except:
+            torch.save(self.state_dict(), fileName)
+            
+    
+    
+    # Load a model from the specified path name
+    # Input:
+    #   fileName - The name of the file to load the model from
+    def loadModel(self, fileName):
+        # If the file doesn't exist, raise an error
+        if (not os.path.isfile(fileName)):
+            raise Exception("Specified model file does no exist")
+        
+        # Load the model
+        self.load_state_dict(torch.load(fileName))
+        self.eval()

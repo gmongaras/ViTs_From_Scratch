@@ -27,6 +27,7 @@ def main():
     valueSize = 16              # Size of each value matrix
     hiddenSize = 768            # Size of the hidden Linear layer
     MLPSize = 3072              # Size of the final MLP layer
+    trainPercent = 0.85         # Percent of data that should be train data
     
     
     # Other parameters
@@ -36,6 +37,20 @@ def main():
     imgWidth = 256              # Width of each image
     imgHeight = 256             # Height of each image
     resize = False              # True to resize the images, False otherwise
+    
+    
+    # Saving parameters
+    fileSaveName = "models/modelCkPt.pt" # Name of file to save model to
+    fileLoadName = "models/modelCkPt.pt" # Name of file to load model from
+    stepsToSave = 5                      # Number of steps before saving the model
+    saveAtBest = True          # Save the model only if it's the best so far, if
+                                # if set to False, the model will overwrite the
+                                # old saved model even if it's worse
+    
+    
+    # Model run modes
+    trainModel = True           # True to train the model
+    loadModel = False           # True to load the model before training
     
     
     
@@ -108,8 +123,26 @@ def main():
     # Create a ViT Model
     model = ViT(patchWidth, patchHeight, numBlocks, keySize, querySize, valueSize, numHeads, numClasses, hiddenSize, MLPSize)
     
-    # Train the model
-    model.train(images, labels, numSteps, batchSize)
+    # Split the data into test and train data
+    trainX = images[:int(len(images)*trainPercent)]
+    trainY = labels[:int(len(images)*trainPercent)]
+    testX = images[int(len(images)*trainPercent):]
+    testY = labels[int(len(images)*trainPercent):]
+    
+    # Load the model if requested to do so
+    if loadModel:
+        model.loadModel(fileLoadName)
+    
+    # Train the model if requested to do so
+    if trainModel:
+        model.train(trainX, trainY, numSteps, batchSize, fileSaveName, stepsToSave, saveAtBest)
+    
+    
+    # Get a prediction on the test data
+    preds, loss = model.forward(testX, testY)
+    print(f"Predictions: {preds}")
+    print(f"Labels: {testY}")
+    print(f"Loss: {loss}")
 
 
 
