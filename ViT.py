@@ -1,4 +1,3 @@
-import re
 from tkinter.tix import Y_REGION
 import torch
 from torch import nn
@@ -191,7 +190,7 @@ class ViT(nn.Module):
         # Get the positional encodings angle
         dModel = x_flat.shape[1]
         if hasattr(self, 'posEncAngle') == False:
-            self.posEncAngle = torch.FloatTensor([[pos/(10000**((2*i)/dModel)) for pos in range(0, dModel)] for i in range(0, x_flat.shape[0])], device=device)
+            self.posEncAngle = torch.tensor([[pos/(10000**((2*i)/dModel)) for pos in range(0, dModel)] for i in range(0, x_flat.shape[0])], dtype=torch.float32, device=device)
         
         # Add the positional encodings to the array
         x_flat[:, 0::2] += torch.sin(self.posEncAngle[:, 0::2])
@@ -232,7 +231,7 @@ class ViT(nn.Module):
             patchArr = []
             
             # Add the class token to the beginning of the patch array
-            patchArr.append(torch.FloatTensor(np.random.uniform(low=0, high=x[0].shape[0], size=(I)), device=device))
+            patchArr.append(torch.tensor(np.random.uniform(low=0, high=x[0].shape[0], size=(I)), dtype=torch.float32, device=device))
             
             # Iterate over all patches
             for i in range(0, x[0].shape[0], self.patchWidth):

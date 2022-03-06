@@ -1,5 +1,4 @@
 from ViT import ViT
-import re
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -32,7 +31,7 @@ def main():
     
     # Other parameters
     pathName = "data"           # Path to load data from
-    numImages = 5               # Number of images to load from each class
+    numImages = 1000            # Number of images to load from each class
                                 # (use -1 to load all images)
     imgWidth = 256              # Width of each image
     imgHeight = 256             # Height of each image
