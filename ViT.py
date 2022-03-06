@@ -4,6 +4,7 @@ from torch import nn
 from torch import optim
 import numpy as np
 import os
+import random
 
 
 device = torch.device('cpu')
@@ -31,9 +32,9 @@ class multiHeadAttention(nn.Module):
         self.embeddingSize = embeddingSize
         
         # Create the matrices
-        self.keyWeights = [nn.Parameter(torch.tensor(np.random.uniform(low=0, high=1, size=(embeddingSize, keySize)), requires_grad=True, device=device, dtype=torch.float32)) for i in range(0, numHeads)]
-        self.queryWeights = [nn.Parameter(torch.tensor(np.random.uniform(low=0, high=1, size=(embeddingSize, querySize)), requires_grad=True, device=device, dtype=torch.float32)) for i in range(0, numHeads)]
-        self.valueWeights = [nn.Parameter(torch.tensor(np.random.uniform(low=0, high=1, size=(embeddingSize, valueSize)), requires_grad=True, device=device, dtype=torch.float32)) for i in range(0, numHeads)]
+        self.keyWeights = [nn.Parameter(torch.tensor(np.random.uniform(low=-1, high=1, size=(embeddingSize, keySize)), requires_grad=True, device=device, dtype=torch.float32)) for i in range(0, numHeads)]
+        self.queryWeights = [nn.Parameter(torch.tensor(np.random.uniform(low=-1, high=1, size=(embeddingSize, querySize)), requires_grad=True, device=device, dtype=torch.float32)) for i in range(0, numHeads)]
+        self.valueWeights = [nn.Parameter(torch.tensor(np.random.uniform(low=-1, high=1, size=(embeddingSize, valueSize)), requires_grad=True, device=device, dtype=torch.float32)) for i in range(0, numHeads)]
         
         # Convert the matrices to parameters
         self.keyWeights = nn.ParameterList(self.keyWeights)
@@ -163,7 +164,7 @@ class ViT(nn.Module):
         self.inputParameters = nn.ParameterList(self.inputParameters)
         
         # Linear and softmax layers for the final output
-        self.linear = nn.Linear(patchWidth*patchWidth*self.numChannels, numClasses)
+        self.linear = nn.Linear(patchWidth*patchHeight*self.numChannels, numClasses)
         self.softmax = nn.Softmax(dim=-1)
         
         # The optimizer for this model
@@ -188,8 +189,8 @@ class ViT(nn.Module):
             self.posEncAngle = torch.FloatTensor([[pos/(10000**((2*i)/dModel)) for pos in range(0, dModel)] for i in range(0, x_flat.shape[0])], device=device)
         
         # Add the positional encodings to the array
-        x_flat[:, 0::2] = torch.sin(self.posEncAngle[:, 0::2])
-        x_flat[:, 1::2] = torch.cos(self.posEncAngle[:, 1::2])
+        x_flat[:, 0::2] += torch.sin(self.posEncAngle[:, 0::2])
+        x_flat[:, 1::2] += torch.cos(self.posEncAngle[:, 1::2])
         
         return x_flat
     
@@ -251,15 +252,25 @@ class ViT(nn.Module):
 
     
     
-    # The loss function for the model
-    # We use Cross Entropy for the loss
+    # Cross Entropy The loss function for the model
     # Inputs:
     #   p - The probabilities we want (Probably a one-hot vector)
     #   q - The probabilities the model predicted
     def CrossEntropyLoss(self, p, q):
-        q = torch.where(q == 0, torch.tensor(0.000001, dtype=torch.float32, device=device), q)
-        q = torch.where(q == 1, torch.tensor(0.999999, dtype=torch.float32, device=device), q)
-        return torch.sum(-torch.sum(p*torch.log(q) + (1-p)*torch.log(1-q), dim=-1))
+        # Ensure the values cannot be 0 or 1 to prevent
+        # inf and NaN in the output and the gradients
+        q = torch.where(q < 0.000001, q+0.000001, q)
+        q = torch.where(q > 0.999999, q-0.000001, q)
+        
+        return -(1/p.shape[0])*torch.sum(p*torch.log(q) + (1-p)*torch.log(1-q), dim=-1)
+
+    
+    # MSE Loss function for the model
+    # Inputs:
+    #   Y - The labels we want the model to predict
+    #   Y_hat - The values the model predicted
+    def MSE(self, Y, Y_hat):
+        return (1/Y.shape[0])*torch.sum((Y-Y_hat)**2)
     
     
     
@@ -272,11 +283,16 @@ class ViT(nn.Module):
     def train(self, x, Y, numSteps, batchSize):
         # Convert the images to arrays of flattened patches
         x_reshaped = self.getPatches(x)
-        x_reshaped.requires_grad = True
+        
+        # Shuffle the inputs and labels
+        shuffleArr = [i for i in range(0, x_reshaped.shape[0])]
+        random.shuffle(shuffleArr)
+        x_reshaped = x_reshaped[shuffleArr]
+        Y = torch.tensor(Y, dtype=torch.long, device=device)[shuffleArr]
         
         # Split the data into batches
         x_batches = torch.split(x_reshaped, batchSize)
-        Y_batches = torch.split(torch.tensor(Y, dtype=torch.float32, requires_grad=True, device=device), batchSize)
+        Y_batches = torch.split(Y, batchSize)
         
         # Train the model for numSteps number of steps
         for step in range(0, numSteps):
@@ -303,10 +319,10 @@ class ViT(nn.Module):
                 classPreds = torch.argmax(soft, dim=-1)
                 
                 # One hot encode the labels
-                Y_oneHot = nn.functional.one_hot(Y_batch.long(), num_classes=soft.shape[-1])
+                Y_oneHot = nn.functional.one_hot(Y_batch, num_classes=soft.shape[-1])
                 
                 # Get the loss for the batch
-                loss = self.CrossEntropyLoss(Y_oneHot, soft)
+                loss = self.CrossEntropyLoss(Y_oneHot, soft).mean()
                 totalLoss += loss.detach().item()
                 
                 # Backpropogate the loss
