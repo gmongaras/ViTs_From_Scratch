@@ -51,6 +51,8 @@ def main():
     # Model run modes
     trainModel = True           # True to train the model
     loadModel = False           # True to load the model before training
+    shuffleTrain = True         # True to shuffle data on training
+    shuffleFor = False          # True to shuffle data on forward pass
     
     
     
@@ -135,11 +137,11 @@ def main():
     
     # Train the model if requested to do so
     if trainModel:
-        model.train(trainX, trainY, numSteps, batchSize, fileSaveName, stepsToSave, saveAtBest)
+        model.train(trainX, trainY, numSteps, batchSize, fileSaveName, stepsToSave, saveAtBest, shuffleTrain)
     
     
     # Get a prediction on the test data
-    preds, loss = model.forward(testX, testY)
+    preds, loss = model.forward(testX, testY, shuffleFor)
     print(f"Predictions: {preds}")
     print(f"Labels: {testY}")
     print(f"Loss: {loss}")

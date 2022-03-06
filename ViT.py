@@ -289,15 +289,17 @@ class ViT(nn.Module):
     #   stepsToSave - Number of steps before saving the model
     #   saveAtBest - Whether the file should only be saved if
     #                it's the new best model
-    def train(self, x, Y, numSteps, batchSize, fileSaveName, stepsToSave, saveAtBest):
+    #   shuffleTrain - True to shuffle data on training
+    def train(self, x, Y, numSteps, batchSize, fileSaveName, stepsToSave, saveAtBest, shuffleTrain):
         # Convert the images to arrays of flattened patches
         x_reshaped = self.getPatches(x)
         
         # Shuffle the inputs and labels
-        shuffleArr = [i for i in range(0, x_reshaped.shape[0])]
-        random.shuffle(shuffleArr)
-        x_reshaped = x_reshaped[shuffleArr]
-        Y = torch.tensor(Y, dtype=torch.long, device=device)[shuffleArr]
+        if shuffleTrain == True:
+            shuffleArr = [i for i in range(0, x_reshaped.shape[0])]
+            random.shuffle(shuffleArr)
+            x_reshaped = x_reshaped[shuffleArr]
+            Y = torch.tensor(Y, dtype=torch.long, device=device)[shuffleArr]
         
         # Split the data into batches
         x_batches = torch.split(x_reshaped, batchSize)
@@ -372,15 +374,17 @@ class ViT(nn.Module):
     #   x - The batch of images to classify
     #   Y - The classes of the images we want to classify
     #       (this variable defaults to None which won't produce a loss)
-    def forward(self, x, Y=None):
+    #   shuffleFor - True to shuffle data on forward pass
+    def forward(self, x, Y=None, shuffleFor=False):
         # Convert the images to arrays of flattened patches
         x_reshaped = self.getPatches(x)
         
         # Shuffle the inputs and labels
-        shuffleArr = [i for i in range(0, x_reshaped.shape[0])]
-        random.shuffle(shuffleArr)
-        x_reshaped = x_reshaped[shuffleArr]
-        Y = torch.tensor(Y, dtype=torch.long, device=device)[shuffleArr]
+        if shuffleFor == True:
+            shuffleArr = [i for i in range(0, x_reshaped.shape[0])]
+            random.shuffle(shuffleArr)
+            x_reshaped = x_reshaped[shuffleArr]
+            Y = torch.tensor(Y, dtype=torch.long, device=device)[shuffleArr]
         
         
         
