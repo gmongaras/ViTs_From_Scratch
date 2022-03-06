@@ -20,11 +20,13 @@ def main():
     patchHeight = 16            # The height of each image patch
     numSteps = 1000             # Number of steps to train the model
     batchSize = 10              # Size of each minibatch
-    numBlocks = 2               # Number of transformer blocks
-    numHeads = 2                # Number of attention heads to use
+    numBlocks = 12              # Number of transformer blocks
+    numHeads = 12               # Number of attention heads to use
     keySize = 16                # Size of each key matrix
     querySize = keySize         # Size of each query matrix
     valueSize = 16              # Size of each value matrix
+    hiddenSize = 768            # Size of the hidden Linear layer
+    MLPSize = 3072              # Size of the final MLP layer
     
     
     # Other parameters
@@ -104,7 +106,7 @@ def main():
     ### Train the Model ###
     
     # Create a ViT Model
-    model = ViT(patchWidth, patchHeight, numBlocks, keySize, querySize, valueSize, numHeads, numClasses)
+    model = ViT(patchWidth, patchHeight, numBlocks, keySize, querySize, valueSize, numHeads, numClasses, hiddenSize, MLPSize)
     
     # Train the model
     model.train(images, labels, numSteps, batchSize)

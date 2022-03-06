@@ -81,7 +81,8 @@ class TransformerBlock(nn.Module):
     #   valueSize - Size of each value matrix for self attention
     #   numHeads - Number of self attention heads to use
     #   embeddingSize (I) - The embedding size of each patch (I = CP^2)
-    def __init__(self, keySize, querySize, valueSize, numHeads, embeddingSize):
+    #   hiddenSize - The size of the hideen linear layer
+    def __init__(self, keySize, querySize, valueSize, numHeads, embeddingSize, hiddenSize):
         super(TransformerBlock, self).__init__()
         
         # The norm blocks in the model
@@ -92,8 +93,8 @@ class TransformerBlock(nn.Module):
         self.multiHeadAttention = multiHeadAttention(keySize, querySize, valueSize, numHeads, embeddingSize)
         
         # The linear layers of the model
-        self.linear1 = nn.Linear(embeddingSize, 2048)
-        self.linear2 = nn.Linear(2048, embeddingSize)
+        self.linear1 = nn.Linear(embeddingSize, hiddenSize)
+        self.linear2 = nn.Linear(hiddenSize, embeddingSize)
         
         # The GELU layer
         self.GELU = nn.GELU()
@@ -147,7 +148,9 @@ class ViT(nn.Module):
     #   valueSize - Size of each value matrix for self attention
     #   numHeads - Number of self attention heads to use
     #   numClasses - Number of classes to predict
-    def __init__(self, patchWidth, patchHeight, numBlocks, keySize, querySize, valueSize, numHeads, numClasses):
+    #   hiddenSize - Size of the hidden Linear layer
+    #   MLPSize - Size of the final MLP layer
+    def __init__(self, patchWidth, patchHeight, numBlocks, keySize, querySize, valueSize, numHeads, numClasses, hiddenSize, MLPSize):
         super(ViT, self).__init__()
         
         # Save the hyperparameters of the model
@@ -159,12 +162,13 @@ class ViT(nn.Module):
         self.transformerBlocks = []
         self.inputParameters = []
         for i in range(0, numBlocks):
-            self.transformerBlocks.append(TransformerBlock(keySize, querySize, valueSize, numHeads, patchWidth*patchWidth*self.numChannels))
+            self.transformerBlocks.append(TransformerBlock(keySize, querySize, valueSize, numHeads, patchWidth*patchWidth*self.numChannels, hiddenSize))
             self.inputParameters += [b for b in self.transformerBlocks[i].parameters()]
         self.inputParameters = nn.ParameterList(self.inputParameters)
         
-        # Linear and softmax layers for the final output
-        self.linear = nn.Linear(patchWidth*patchHeight*self.numChannels, numClasses)
+        # MLP and softmax layers for the final output
+        self.linear1 = nn.Linear(patchWidth*patchHeight*self.numChannels, MLPSize)
+        self.linear2 = nn.Linear(MLPSize, numClasses)
         self.softmax = nn.Softmax(dim=-1)
         
         # The optimizer for this model
@@ -312,8 +316,9 @@ class ViT(nn.Module):
                     trans = self.transformerBlocks[block](trans)
                 
                 # Get the softmax predictions from the network
-                linear = self.linear(trans[:, 0])
-                soft = self.softmax(linear)
+                linear1 = self.linear1(trans[:, 0])
+                linear2 = self.linear2(linear1)
+                soft = self.softmax(linear2)
                 
                 # Get the class prediction
                 classPreds = torch.argmax(soft, dim=-1)
