@@ -351,8 +351,8 @@ class ViT(nn.Module):
             # Print the loss and example output
             print(f"Step number: {step}")
             print(f"Total loss: {totalLoss}")
-            print(f"Actual Labels: {Y_batch.detach().numpy()}")
-            print(f"Predictions: {classPreds.detach().numpy()}")
+            print(f"Actual Labels: {Y_batch.detach().cpu().numpy()}")
+            print(f"Predictions: {classPreds.detach().cpu().numpy()}")
             print()
             
             # Check if the model should be saved every `stepsToSave` steps
@@ -409,10 +409,10 @@ class ViT(nn.Module):
             loss = self.CrossEntropyLoss(Y_oneHot, soft).mean()
         
             # Return the predictions and loss
-            return classPreds.detach().numpy(), loss.detach().item()
+            return classPreds.detach().cpu().numpy(), loss.detach().item()
 
         # Return the predictions
-        return classPreds.detach().numpy()
+        return classPreds.detach().cpu().numpy()
     
     
     # Save a model to the specified path name
