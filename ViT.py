@@ -62,7 +62,7 @@ class multiHeadAttention(nn.Module):
     # Compute the multihead attention of the inputs
     def forward(self, x):
         # Compute `numHeads` number of attention
-        attention = torch.tensor([], requires_grad=True, dtype=x.dtype)
+        attention = torch.tensor([], requires_grad=True, dtype=x.dtype, device=device)
         for att in range(0, self.numHeads):
             attention = torch.cat((attention, self.selfAttention(x, att)), dim=-1)
         
@@ -86,18 +86,18 @@ class TransformerBlock(nn.Module):
         super(TransformerBlock, self).__init__()
         
         # The norm blocks in the model
-        self.norm1 = nn.LayerNorm(embeddingSize)
-        self.norm2 = nn.LayerNorm(embeddingSize)
+        self.norm1 = nn.LayerNorm(embeddingSize).to(device=device)
+        self.norm2 = nn.LayerNorm(embeddingSize).to(device=device)
         
         # The multihead attention for this block
         self.multiHeadAttention = multiHeadAttention(keySize, querySize, valueSize, numHeads, embeddingSize)
         
         # The linear layers of the model
-        self.linear1 = nn.Linear(embeddingSize, hiddenSize)
-        self.linear2 = nn.Linear(hiddenSize, embeddingSize)
+        self.linear1 = nn.Linear(embeddingSize, hiddenSize).to(device=device)
+        self.linear2 = nn.Linear(hiddenSize, embeddingSize).to(device=device)
         
         # The GELU layer
-        self.GELU = nn.GELU()
+        self.GELU = nn.GELU().to(device=device)
     
     
     
@@ -167,9 +167,9 @@ class ViT(nn.Module):
         self.inputParameters = nn.ParameterList(self.inputParameters)
         
         # MLP and softmax layers for the final output
-        self.linear1 = nn.Linear(patchWidth*patchHeight*self.numChannels, MLPSize)
-        self.linear2 = nn.Linear(MLPSize, numClasses)
-        self.softmax = nn.Softmax(dim=-1)
+        self.linear1 = nn.Linear(patchWidth*patchHeight*self.numChannels, MLPSize).to(device=device)
+        self.linear2 = nn.Linear(MLPSize, numClasses).to(device=device)
+        self.softmax = nn.Softmax(dim=-1).to(device=device)
         
         # The optimizer for this model
         self.optimizer = optim.Adam(self.parameters())
