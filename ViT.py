@@ -225,13 +225,17 @@ class ViT(nn.Module):
         # Holds the reshaped images
         x_reshaped = []
         
+        # Initialize the class token to a random vector
+        # of length I with values between 0 and 256
+        classTok = torch.tensor(np.random.uniform(low=0, high=256, size=(I)), dtype=torch.float32, device=device)
+        
         # Iterate over all images in the batch
         for image in range(0, len(x)):
             # Holds an array of patches for the image
             patchArr = []
             
             # Add the class token to the beginning of the patch array
-            patchArr.append(torch.tensor(np.random.uniform(low=0, high=x[0].shape[0], size=(I)), dtype=torch.float32, device=device))
+            patchArr.append(classTok)
             
             # Iterate over all patches
             for i in range(0, x[0].shape[0], self.patchWidth):
