@@ -25,7 +25,6 @@ def main():
     querySize = keySize         # Size of each query matrix
     valueSize = 16              # Size of each value matrix
     hiddenSize = 768            # Size of the hidden Linear layer
-    MLPSize = 3072              # Size of the final MLP layer
     trainPercent = 0.85         # Percent of data that should be train data
     warmupSteps = 10000         # Nuber of warmup steps when chainging the larning rate of the model
     
@@ -126,7 +125,7 @@ def main():
     ### Train the Model ###
     
     # Create a ViT Model
-    model = ViT(patchWidth, patchHeight, numBlocks, keySize, querySize, valueSize, numHeads, numClasses, hiddenSize, MLPSize)
+    model = ViT(patchWidth, patchHeight, numBlocks, keySize, querySize, valueSize, numHeads, numClasses, hiddenSize)
     
     # Split the data into test and train data
     trainX = images[:int(len(images)*trainPercent)]

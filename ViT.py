@@ -152,8 +152,7 @@ class ViT(nn.Module):
     #   numHeads - Number of self attention heads to use
     #   numClasses - Number of classes to predict
     #   hiddenSize - Size of the hidden Linear layer
-    #   MLPSize - Size of the final MLP layer
-    def __init__(self, patchWidth, patchHeight, numBlocks, keySize, querySize, valueSize, numHeads, numClasses, hiddenSize, MLPSize):
+    def __init__(self, patchWidth, patchHeight, numBlocks, keySize, querySize, valueSize, numHeads, numClasses, hiddenSize):
         super(ViT, self).__init__()
         
         # Save the hyperparameters of the model
@@ -172,7 +171,6 @@ class ViT(nn.Module):
         
         # MLP and softmax layers for the final output
         self.linear1 = nn.Linear(patchWidth*patchHeight*self.numChannels, numClasses).to(device=device)
-        #self.linear2 = nn.Linear(MLPSize, numClasses).to(device=device)
         self.softmax = nn.Softmax(dim=-1).to(device=device)
         
         # The optimizer for this model
@@ -303,11 +301,12 @@ class ViT(nn.Module):
         x_reshaped = self.getPatches(x)
         
         # Shuffle the inputs and labels
+        Y = torch.tensor(Y, dtype=torch.long, device=device)
         if shuffleTrain == True:
             shuffleArr = [i for i in range(0, x_reshaped.shape[0])]
             random.shuffle(shuffleArr)
             x_reshaped = x_reshaped[shuffleArr]
-            Y = torch.tensor(Y, dtype=torch.long, device=device)[shuffleArr]
+            Y = Y[shuffleArr]
         
         # Split the data into batches
         x_batches = torch.split(x_reshaped, batchSize)
@@ -340,7 +339,6 @@ class ViT(nn.Module):
                 
                 # Get the softmax predictions from the network
                 linear1 = self.linear1(trans[:, 0])
-                #linear2 = self.linear2(linear1)
                 soft = self.softmax(linear1)
                 
                 # Get the class prediction
@@ -393,11 +391,12 @@ class ViT(nn.Module):
         x_reshaped = self.getPatches(x)
         
         # Shuffle the inputs and labels
+        Y = torch.tensor(Y, dtype=torch.long, device=device)
         if shuffleFor == True:
             shuffleArr = [i for i in range(0, x_reshaped.shape[0])]
             random.shuffle(shuffleArr)
             x_reshaped = x_reshaped[shuffleArr]
-            Y = torch.tensor(Y, dtype=torch.long, device=device)[shuffleArr]
+            Y = Y[shuffleArr]
         
         
         
@@ -408,8 +407,7 @@ class ViT(nn.Module):
         
         # Get the softmax predictions from the network
         linear1 = self.linear1(trans[:, 0])
-        linear2 = self.linear2(linear1)
-        soft = self.softmax(linear2)
+        soft = self.softmax(linear1)
         
         # Get the class prediction
         classPreds = torch.argmax(soft, dim=-1)
