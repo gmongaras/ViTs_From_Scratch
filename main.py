@@ -18,7 +18,7 @@ def main():
     patchWidth = 16             # The Width of each image patch
     patchHeight = 16            # The height of each image patch
     numSteps = 1000             # Number of steps to train the model
-    batchSize = 10              # Size of each minibatch
+    batchSize = 15              # Size of each minibatch
     numBlocks = 12              # Number of transformer blocks
     numHeads = 12               # Number of attention heads to use
     keySize = 16                # Size of each key matrix
@@ -27,11 +27,12 @@ def main():
     hiddenSize = 768            # Size of the hidden Linear layer
     MLPSize = 3072              # Size of the final MLP layer
     trainPercent = 0.85         # Percent of data that should be train data
+    warmupSteps = 40            # Nuber of warmup steps when chainging the larning rate of the model
     
     
     # Other parameters
     pathName = "data"           # Path to load data from
-    numImages = 1000            # Number of images to load from each class
+    numImages = 250             # Number of images to load from each class
                                 # (use -1 to load all images)
     imgWidth = 256              # Width of each image
     imgHeight = 256             # Height of each image
@@ -42,7 +43,7 @@ def main():
     fileSaveName = "models/modelCkPt.pt" # Name of file to save model to
     fileLoadName = "models/modelCkPt.pt" # Name of file to load model from
     stepsToSave = 5                      # Number of steps before saving the model
-    saveAtBest = True          # Save the model only if it's the best so far, if
+    saveAtBest = True           # Save the model only if it's the best so far, if
                                 # if set to False, the model will overwrite the
                                 # old saved model even if it's worse
     
@@ -97,10 +98,13 @@ def main():
             img = img.convert('RGB')
             
             # Conver the image to a numpy array
-            img = np.array(img)
+            img = np.array(img, dtype=np.float)
+
+            # Normalize the image between 0 and 1
+            img /= 255
             
             # Convert the image to a tensor
-            img = torch.tensor(img, device=device)
+            img = torch.tensor(img, device=device, dtype=torch.float16)
             
             # Store the image in a list of images
             images.append(img)
@@ -136,7 +140,7 @@ def main():
     
     # Train the model if requested to do so
     if trainModel:
-        model.train(trainX, trainY, numSteps, batchSize, fileSaveName, stepsToSave, saveAtBest, shuffleTrain)
+        model.trainModel(trainX, trainY, numSteps, batchSize, fileSaveName, stepsToSave, saveAtBest, shuffleTrain, warmupSteps)
     
     
     # Get a prediction on the test data
