@@ -4,6 +4,7 @@ import numpy as np
 import os
 from PIL import Image
 import torch
+import random
 
 
 device = torch.device('cpu')
@@ -17,21 +18,21 @@ def main():
     # Hyperparameters
     patchWidth = 16             # The Width of each image patch
     patchHeight = 16            # The height of each image patch
-    numSteps = 1000              # Number of steps to train the model
-    batchSize = 15              # Size of each minibatch
+    numSteps = 1000             # Number of steps to train the model
+    batchSize = 25              # Size of each minibatch
     numBlocks = 8               # Number of transformer blocks
     numHeads = 8                # Number of attention heads to use
     keySize = 16                # Size of each key matrix
     querySize = keySize         # Size of each query matrix
     valueSize = 16              # Size of each value matrix
     hiddenSize = 768            # Size of the hidden Linear layer
-    trainPercent = 0.85         # Percent of data that should be train data
-    warmupSteps = 10000         # Nuber of warmup steps when chainging the larning rate of the model
+    trainPercent = 0.90         # Percent of data that should be train data
+    warmupSteps = 10000         # Nuber of warmup steps when changing the learning rate of the model
     
     
     # Other parameters
     pathName = "data"           # Path to load data from
-    numImages = 250             # Number of images to load from each class
+    numImages = 1100            # Number of images to load from each class
                                 # (use -1 to load all images)
     imgWidth = 256              # Width of each image
     imgHeight = 256             # Height of each image
@@ -50,8 +51,8 @@ def main():
     # Model run modes
     trainModel = True           # True to train the model
     loadModel = False           # True to load the model before training
-    shuffleTrain = True         # True to shuffle data on training
-    shuffleFor = False          # True to shuffle data on forward pass
+    shuffleData = True          # True to shuffle data before training and testing
+    shuffleDuringTrain = True   # True to shuffle data after each training epoch
     
     
     
@@ -127,6 +128,17 @@ def main():
     # Create a ViT Model
     model = ViT(patchWidth, patchHeight, numBlocks, keySize, querySize, valueSize, numHeads, numClasses, hiddenSize)
     
+    # Convert the data to tensors
+    images = torch.stack(images).float().to(device=device)
+    labels = torch.tensor(labels, dtype=torch.long, device=device)
+
+    # Shuffle the data
+    if shuffleData == True:
+        shuffleArr = [i for i in range(0, images.shape[0])]
+        random.shuffle(shuffleArr)
+        images = images[shuffleArr]
+        labels = labels[shuffleArr]
+
     # Split the data into test and train data
     trainX = images[:int(len(images)*trainPercent)]
     trainY = labels[:int(len(images)*trainPercent)]
@@ -139,11 +151,11 @@ def main():
     
     # Train the model if requested to do so
     if trainModel:
-        model.trainModel(trainX, trainY, numSteps, batchSize, fileSaveName, stepsToSave, saveAtBest, shuffleTrain, warmupSteps)
+        model.trainModel(trainX, trainY, numSteps, batchSize, fileSaveName, stepsToSave, saveAtBest, warmupSteps, shuffleDuringTrain)
     
     
     # Get a prediction on the test data
-    preds, loss = model.forward(testX, testY, shuffleFor)
+    preds, loss = model.forward(testX, testY)
     print(f"Predictions: {preds}")
     print(f"Labels: {testY}")
     print(f"Loss: {loss}")

@@ -4,8 +4,8 @@ from torch import nn
 from torch import optim
 import numpy as np
 import os
-import random
 import math
+import random
 
 
 device = torch.device('cpu')
@@ -294,26 +294,22 @@ class ViT(nn.Module):
     #   stepsToSave - Number of steps before saving the model
     #   saveAtBest - Whether the file should only be saved if
     #                it's the new best model
-    #   shuffleTrain - True to shuffle data on training
     #   warmupSteps - Number of warmup steps to use when changing the larning rate
-    def trainModel(self, x, Y, numSteps, batchSize, fileSaveName, stepsToSave, saveAtBest, shuffleTrain, warmupSteps):
+    #   shuffleDuringTrain - True to shuffle data after each training epoch
+    def trainModel(self, x, Y, numSteps, batchSize, fileSaveName, stepsToSave, saveAtBest, warmupSteps, shuffleDuringTrain):
         # Convert the images to arrays of flattened patches
         x_reshaped = self.getPatches(x)
         
-        # Shuffle the inputs and labels
-        Y = torch.tensor(Y, dtype=torch.long, device=device)
-        if shuffleTrain == True:
-            shuffleArr = [i for i in range(0, x_reshaped.shape[0])]
-            random.shuffle(shuffleArr)
-            x_reshaped = x_reshaped[shuffleArr]
-            Y = Y[shuffleArr]
-        
         # Split the data into batches
-        x_batches = torch.split(x_reshaped, batchSize)
-        Y_batches = torch.split(Y, batchSize)
+        if shuffleDuringTrain == False:
+            x_batches = torch.split(x_reshaped, batchSize)
+            Y_batches = torch.split(Y, batchSize)
         
         # The best lost out of all steps
         bestLoss = np.inf
+
+        # Array used to shuffle the data
+        shuffleArr = [i for i in range(0, x_reshaped.shape[0])]
         
         # Train the model for numSteps number of steps
         for step in range(1, numSteps+1):
@@ -321,6 +317,17 @@ class ViT(nn.Module):
             alpha = (self.valueSize**-0.5)*min((step**-0.5), (step*(warmupSteps**-1.5)))
             for g in self.optimizer.param_groups:
                 g["lr"] = alpha
+
+            # Shuffle the data if requested to do so
+            if shuffleDuringTrain == True:
+                # Shuffle the array
+                random.shuffle(shuffleArr)
+                x_shuffled = x_reshaped[shuffleArr]
+                Y_shuffled = Y[shuffleArr]
+
+                # Split into batches
+                x_batches = torch.split(x_shuffled, batchSize)
+                Y_batches = torch.split(Y_shuffled, batchSize)
 
             # The total loss over batches
             totalLoss = 0
@@ -385,20 +392,9 @@ class ViT(nn.Module):
     #   x - The batch of images to classify
     #   Y - The classes of the images we want to classify
     #       (this variable defaults to None which won't produce a loss)
-    #   shuffleFor - True to shuffle data on forward pass
-    def forward(self, x, Y=None, shuffleFor=False):
+    def forward(self, x, Y=None):
         # Convert the images to arrays of flattened patches
         x_reshaped = self.getPatches(x)
-        
-        # Shuffle the inputs and labels
-        Y = torch.tensor(Y, dtype=torch.long, device=device)
-        if shuffleFor == True:
-            shuffleArr = [i for i in range(0, x_reshaped.shape[0])]
-            random.shuffle(shuffleArr)
-            x_reshaped = x_reshaped[shuffleArr]
-            Y = Y[shuffleArr]
-        
-        
         
         # Send the images through the transformer blocks
         trans = x_reshaped
