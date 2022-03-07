@@ -5,6 +5,7 @@ from torch import optim
 import numpy as np
 import os
 import random
+import math
 
 
 device = torch.device('cpu')
@@ -32,9 +33,11 @@ class multiHeadAttention(nn.Module):
         self.embeddingSize = embeddingSize
         
         # Create the matrices
-        self.keyWeights = [nn.Parameter(torch.tensor(np.random.uniform(low=-1, high=1, size=(embeddingSize, keySize)), requires_grad=True, device=device, dtype=torch.float32)) for i in range(0, numHeads)]
-        self.queryWeights = [nn.Parameter(torch.tensor(np.random.uniform(low=-1, high=1, size=(embeddingSize, querySize)), requires_grad=True, device=device, dtype=torch.float32)) for i in range(0, numHeads)]
-        self.valueWeights = [nn.Parameter(torch.tensor(np.random.uniform(low=-1, high=1, size=(embeddingSize, valueSize)), requires_grad=True, device=device, dtype=torch.float32)) for i in range(0, numHeads)]
+        k = 1/embeddingSize
+        k_sqrt = math.sqrt(k)
+        self.keyWeights = [nn.Parameter(torch.tensor(np.random.uniform(low=-k_sqrt, high=k_sqrt, size=(embeddingSize, keySize)), requires_grad=True, device=device, dtype=torch.float32)) for i in range(0, numHeads)]
+        self.queryWeights = [nn.Parameter(torch.tensor(np.random.uniform(low=-k_sqrt, high=k_sqrt, size=(embeddingSize, querySize)), requires_grad=True, device=device, dtype=torch.float32)) for i in range(0, numHeads)]
+        self.valueWeights = [nn.Parameter(torch.tensor(np.random.uniform(low=-k_sqrt, high=k_sqrt, size=(embeddingSize, valueSize)), requires_grad=True, device=device, dtype=torch.float32)) for i in range(0, numHeads)]
         
         # Convert the matrices to parameters
         self.keyWeights = nn.ParameterList(self.keyWeights)
@@ -43,7 +46,7 @@ class multiHeadAttention(nn.Module):
         
         # The matrix to convert the attention back to the
         # input shape
-        self.conversionMatrix = nn.Parameter(torch.tensor(np.random.uniform(0, 1, size=(numHeads*valueSize, embeddingSize)), requires_grad=True, dtype=torch.float32, device=device), requires_grad=True)
+        self.conversionMatrix = nn.Parameter(torch.tensor(np.random.uniform(-1, 1, size=(numHeads*valueSize, embeddingSize)), requires_grad=True, dtype=torch.float32, device=device), requires_grad=True)
     
     
     
@@ -157,6 +160,7 @@ class ViT(nn.Module):
         self.patchWidth = patchWidth
         self.patchHeight = patchHeight
         self.numChannels = 3
+        self.valueSize = valueSize
         
         # Create the transformer blocks while registering the parameters
         self.transformerBlocks = []
@@ -167,8 +171,8 @@ class ViT(nn.Module):
         self.inputParameters = nn.ParameterList(self.inputParameters)
         
         # MLP and softmax layers for the final output
-        self.linear1 = nn.Linear(patchWidth*patchHeight*self.numChannels, MLPSize).to(device=device)
-        self.linear2 = nn.Linear(MLPSize, numClasses).to(device=device)
+        self.linear1 = nn.Linear(patchWidth*patchHeight*self.numChannels, numClasses).to(device=device)
+        #self.linear2 = nn.Linear(MLPSize, numClasses).to(device=device)
         self.softmax = nn.Softmax(dim=-1).to(device=device)
         
         # The optimizer for this model
@@ -226,8 +230,8 @@ class ViT(nn.Module):
         x_reshaped = []
         
         # Initialize the class token to a random vector
-        # of length I with values between 0 and 256
-        classTok = torch.tensor(np.random.uniform(low=0, high=256, size=(I)), dtype=torch.float32, device=device)
+        # of length I with values between 0 and 1
+        classTok = torch.tensor(np.random.uniform(low=0, high=1, size=(I)), dtype=torch.float32, device=device)
         
         # Iterate over all images in the batch
         for image in range(0, len(x)):
@@ -293,7 +297,8 @@ class ViT(nn.Module):
     #   saveAtBest - Whether the file should only be saved if
     #                it's the new best model
     #   shuffleTrain - True to shuffle data on training
-    def train(self, x, Y, numSteps, batchSize, fileSaveName, stepsToSave, saveAtBest, shuffleTrain):
+    #   warmupSteps - Number of warmup steps to use when changing the larning rate
+    def trainModel(self, x, Y, numSteps, batchSize, fileSaveName, stepsToSave, saveAtBest, shuffleTrain, warmupSteps):
         # Convert the images to arrays of flattened patches
         x_reshaped = self.getPatches(x)
         
@@ -313,6 +318,11 @@ class ViT(nn.Module):
         
         # Train the model for numSteps number of steps
         for step in range(1, numSteps+1):
+            # Update the learning rate
+            alpha = (self.valueSize**-0.5)*min((step**-0.5), (step*(warmupSteps**-1.5)))
+            for g in self.optimizer.param_groups:
+                g["lr"] = alpha
+
             # The total loss over batches
             totalLoss = 0
             
@@ -330,8 +340,8 @@ class ViT(nn.Module):
                 
                 # Get the softmax predictions from the network
                 linear1 = self.linear1(trans[:, 0])
-                linear2 = self.linear2(linear1)
-                soft = self.softmax(linear2)
+                #linear2 = self.linear2(linear1)
+                soft = self.softmax(linear1)
                 
                 # Get the class prediction
                 classPreds = torch.argmax(soft, dim=-1)
