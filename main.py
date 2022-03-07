@@ -17,17 +17,17 @@ def main():
     # Hyperparameters
     patchWidth = 16             # The Width of each image patch
     patchHeight = 16            # The height of each image patch
-    numSteps = 1000             # Number of steps to train the model
+    numSteps = 1000              # Number of steps to train the model
     batchSize = 15              # Size of each minibatch
-    numBlocks = 12              # Number of transformer blocks
-    numHeads = 12               # Number of attention heads to use
+    numBlocks = 8               # Number of transformer blocks
+    numHeads = 8                # Number of attention heads to use
     keySize = 16                # Size of each key matrix
     querySize = keySize         # Size of each query matrix
     valueSize = 16              # Size of each value matrix
     hiddenSize = 768            # Size of the hidden Linear layer
     MLPSize = 3072              # Size of the final MLP layer
     trainPercent = 0.85         # Percent of data that should be train data
-    warmupSteps = 40            # Nuber of warmup steps when chainging the larning rate of the model
+    warmupSteps = 10000         # Nuber of warmup steps when chainging the larning rate of the model
     
     
     # Other parameters

@@ -46,7 +46,7 @@ class multiHeadAttention(nn.Module):
         
         # The matrix to convert the attention back to the
         # input shape
-        self.conversionMatrix = nn.Parameter(torch.tensor(np.random.uniform(-1, 1, size=(numHeads*valueSize, embeddingSize)), requires_grad=True, dtype=torch.float32, device=device), requires_grad=True)
+        self.conversionMatrix = nn.Parameter(torch.tensor(np.random.uniform(low=-k_sqrt, high=k_sqrt, size=(numHeads*valueSize, embeddingSize)), requires_grad=True, dtype=torch.float32, device=device), requires_grad=True)
     
     
     
