@@ -28,6 +28,7 @@ def main():
     hiddenSize = 768            # Size of the hidden Linear layer
     trainPercent = 0.90         # Percent of data that should be train data
     warmupSteps = 10000         # Nuber of warmup steps when changing the learning rate of the model
+    numClasses = 10             # Number of classes for the newtork to predict
     
     
     # Other parameters
@@ -42,7 +43,7 @@ def main():
     # Saving parameters
     fileSaveName = "models/modelCkPt.pt" # Name of file to save model to
     fileLoadName = "models/modelCkPt.pt" # Name of file to load model from
-    stepsToSave = 5                      # Number of steps before saving the model
+    stepsToSave = 2                      # Number of steps before saving the model
     saveAtBest = True           # Save the model only if it's the best so far, if
                                 # if set to False, the model will overwrite the
                                 # old saved model even if it's worse
@@ -68,14 +69,8 @@ def main():
     # Holds all image labels
     labels = []
     
-    # Holds the total number of classes
-    numClasses = 0
-    
     # Iterate over all folders in the image directory
     for path in os.listdir(pathName):
-        # Increase the number of classes
-        numClasses += 1
-        
         # Construct the path
         dirPath = os.path.join(pathName, path)
         
