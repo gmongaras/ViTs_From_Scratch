@@ -173,6 +173,11 @@ class ViT(nn.Module):
         self.linear1 = nn.Linear(patchWidth*patchHeight*self.numChannels, numClasses).to(device=device)
         self.softmax = nn.Softmax(dim=-1).to(device=device)
         
+        # Initialize the class token to a random vector
+        # of length I with values between 0 and 1
+        I = self.numChannels*self.patchWidth*self.patchHeight
+        self.classTok = nn.Parameter(torch.tensor(np.random.uniform(low=0, high=1, size=(I)), dtype=torch.float32, device=device), requires_grad=False)
+        
         # The optimizer for this model
         self.optimizer = optim.Adam(self.parameters())
         
@@ -222,14 +227,10 @@ class ViT(nn.Module):
         
         # Calculate the number of patches and flattened patch size
         N = (x[0].shape[0]*x[0].shape[1])/(self.patchWidth*self.patchHeight)
-        I = x[0].shape[2]*self.patchWidth*self.patchHeight
+        I = self.numChannels*self.patchWidth*self.patchHeight
         
         # Holds the reshaped images
         x_reshaped = []
-        
-        # Initialize the class token to a random vector
-        # of length I with values between 0 and 1
-        classTok = torch.tensor(np.random.uniform(low=0, high=1, size=(I)), dtype=torch.float32, device=device)
         
         # Iterate over all images in the batch
         for image in range(0, len(x)):
@@ -237,7 +238,7 @@ class ViT(nn.Module):
             patchArr = []
             
             # Add the class token to the beginning of the patch array
-            patchArr.append(classTok)
+            patchArr.append(self.classTok)
             
             # Iterate over all patches
             for i in range(0, x[0].shape[0], self.patchWidth):
