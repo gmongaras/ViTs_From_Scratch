@@ -33,7 +33,7 @@ def main():
     
     # Other parameters
     pathName = "data"           # Path to load data from
-    numImages = 10            # Number of images to load from each class
+    numImages = 1100            # Number of images to load from each class
                                 # (use -1 to load all images)
     imgWidth = 256              # Width of each image
     imgHeight = 256             # Height of each image
