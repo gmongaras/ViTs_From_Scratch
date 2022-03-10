@@ -41,17 +41,18 @@ def main():
     
     
     # Saving parameters
-    fileSaveName = "models/modelCkPt.pt" # Name of file to save model to
-    fileLoadName = "models/modelCkPt.pt" # Name of file to load model from
+    fileSaveName = "models/modelCkPt" # Name of file to save model to
+    fileLoadName = "models/modelCkPt" # Name of file to load model from
     stepsToSave = 2                      # Number of steps before saving the model
     saveAtBest = True           # Save the model only if it's the best so far, if
                                 # if set to False, the model will overwrite the
                                 # old saved model even if it's worse
+    newName = True              # Use a new filename to save the model at each step
     
     
     # Model run modes
-    trainModel = False           # True to train the model
-    loadModel = True           # True to load the model before training
+    trainModel = True           # True to train the model
+    loadModel = False           # True to load the model before training
     shuffleData = True          # True to shuffle data before training and testing
     shuffleDuringTrain = True   # True to shuffle data after each training epoch
     
@@ -146,7 +147,7 @@ def main():
     
     # Train the model if requested to do so
     if trainModel:
-        model.trainModel(trainX, trainY, numSteps, batchSize, fileSaveName, stepsToSave, saveAtBest, warmupSteps, shuffleDuringTrain)
+        model.trainModel(trainX, trainY, numSteps, batchSize, fileSaveName, stepsToSave, saveAtBest, warmupSteps, shuffleDuringTrain, newName)
     
     
     # Get a prediction on the test data

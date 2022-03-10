@@ -297,7 +297,8 @@ class ViT(nn.Module):
     #                it's the new best model
     #   warmupSteps - Number of warmup steps to use when changing the larning rate
     #   shuffleDuringTrain - True to shuffle data after each training epoch
-    def trainModel(self, x, Y, numSteps, batchSize, fileSaveName, stepsToSave, saveAtBest, warmupSteps, shuffleDuringTrain):
+    #   newName - Use a new filename to save the model at each step
+    def trainModel(self, x, Y, numSteps, batchSize, fileSaveName, stepsToSave, saveAtBest, warmupSteps, shuffleDuringTrain, newName = False):
         # Convert the images to arrays of flattened patches
         x_reshaped = self.getPatches(x)
         
@@ -381,10 +382,24 @@ class ViT(nn.Module):
                     if totalLoss < bestLoss:
                         bestLoss = totalLoss
                         print("Saving Model\n")
-                        self.saveModel(fileSaveName)
+                        
+                        # If newName is True, add the step to the
+                        # file name and save it
+                        if newName == True:
+                            self.saveModel(fileSaveName + f" - Step {step}")
+                        # Save the model normally
+                        else:
+                            self.saveModel(fileSaveName)
                 else:
                     print("Saving Model\n")
-                    self.saveModel(fileSaveName)
+                    
+                    # If newName is True, add the step to the
+                    # file name and save it
+                    if newName == True:
+                        self.saveModel(fileSaveName + f" - Step {step}")
+                    # Save the model normally
+                    else:
+                        self.saveModel(fileSaveName)
     
     
     
