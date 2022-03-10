@@ -33,7 +33,7 @@ def main():
     
     # Other parameters
     pathName = "data"           # Path to load data from
-    numImages = 1100            # Number of images to load from each class
+    numImages = 10            # Number of images to load from each class
                                 # (use -1 to load all images)
     imgWidth = 256              # Width of each image
     imgHeight = 256             # Height of each image
@@ -50,8 +50,8 @@ def main():
     
     
     # Model run modes
-    trainModel = True           # True to train the model
-    loadModel = False           # True to load the model before training
+    trainModel = False           # True to train the model
+    loadModel = True           # True to load the model before training
     shuffleData = True          # True to shuffle data before training and testing
     shuffleDuringTrain = True   # True to shuffle data after each training epoch
     
@@ -152,8 +152,9 @@ def main():
     # Get a prediction on the test data
     preds, loss = model.forward(testX, testY)
     print(f"Predictions: {preds}")
-    print(f"Labels: {testY}")
+    print(f"Labels:      {testY.detach().cpu().numpy()}")
     print(f"Loss: {loss}")
+    print(f"Diff: {np.sum(np.abs(preds-testY.detach().cpu().numpy()))}")
 
 
 

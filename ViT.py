@@ -356,7 +356,7 @@ class ViT(nn.Module):
                 Y_oneHot = nn.functional.one_hot(Y_batch, num_classes=soft.shape[-1])
                 
                 # Get the loss for the batch
-                loss = self.CrossEntropyLoss(Y_oneHot, soft).mean()
+                loss = self.CrossEntropyLoss(Y_oneHot, soft).sum()
                 totalLoss += loss.detach().item()
                 
                 # Backpropogate the loss
@@ -415,7 +415,7 @@ class ViT(nn.Module):
             Y_oneHot = nn.functional.one_hot(Y, num_classes=soft.shape[-1])
             
             # Get the loss for the batch
-            loss = self.CrossEntropyLoss(Y_oneHot, soft).mean()
+            loss = self.CrossEntropyLoss(Y_oneHot, soft).sum()
         
             # Return the predictions and loss
             return classPreds.detach().cpu().numpy(), loss.detach().item()
