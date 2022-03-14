@@ -19,7 +19,7 @@ def main():
     patchWidth = 16             # The Width of each image patch
     patchHeight = 16            # The height of each image patch
     numSteps = 1000             # Number of steps to train the model
-    batchSize = 25              # Size of each minibatch
+    batchSize = 75              # Size of each minibatch
     numBlocks = 8               # Number of transformer blocks
     numHeads = 8                # Number of attention heads to use
     keySize = 16                # Size of each key matrix
@@ -42,7 +42,7 @@ def main():
     
     # Saving parameters
     fileSaveName = "models/modelCkPt" # Name of file to save model to
-    fileLoadName = "models/modelCkPt" # Name of file to load model from
+    fileLoadName = "models/savedModel" # Name of file to load model from
     stepsToSave = 2                      # Number of steps before saving the model
     saveAtBest = True           # Save the model only if it's the best so far, if
                                 # if set to False, the model will overwrite the
