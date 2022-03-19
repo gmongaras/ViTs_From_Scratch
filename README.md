@@ -88,4 +88,71 @@ Different modes to run the model
 
 
 ## Training the Model
-To train the model, set the
+To train the model, set the trainModel flag to True and run `main.py`
+
+As the model trains, it will save a checkpoint every 2 steps with a new file name by default.
+
+During training, output is sent to the console to show how the model is progressing:
+- The first line specifies the current step number
+- The second line specifies the model's loss at the current step
+- The third line specifies the actual labels which we want the model to predict
+- The final line specifies the model's predictions. We want these predictions to match the labels.
+
+Below is an image of the first training step of a randomized model:
+<img width="750" alt="Train Image" src="https://github.com/gmongaras/ViTs_From_Scratch/blob/main/gitImages/trainPic.png">
+
+
+## Testing The Model
+When the model is done training, it will be tested on a few sentences with an output that looks similar to the training output.
+
+Alternatively, a test set has been configured of random images. An exmaple is shown in the [Results](https://github.com/gmongaras/ViTs_From_Scratch#results) section at the bottom of the README.
+
+To skip training and go straight to testing, the `trainModel` flag can be changed to False in the [Model run modes](https://github.com/gmongaras/ViTs_From_Scratch#model-run-modes) section of the main function.
+
+## Saving and Loading a Model
+By default, the model will be saved to the `models/` directory and will be saved to a file named `modelCkPt.pt`. This path can be changed using the modelSaveName parameter in the [Saving parameters](https://github.com/gmongaras/ViTs_From_Scratch#saving-parameters) section of the main function.
+
+As stated in the Training The Model section, the model will be saved every 2 steps by default. This parameter can be changed by specifying the number of steps until the model is saved using the `stepsToSave` parameter in the [Saving parameters](https://github.com/gmongaras/ViTs_From_Scratch#saving-parameters) section of the main function.
+
+To load a model, change the `loadModel` flag in the [Model run modes](https://github.com/gmongaras/ViTs_From_Scratch#model-run-modes) to true and change the `modelLoadName` variable in the [Saving parameters](https://github.com/gmongaras/ViTs_From_Scratch#saving-parameters) section to the path of the file you want to load in.
+
+# Model Classes
+While the model is training or testing, the output will be in numerical form. Each number represents a different class:
+- 0: cat
+- 1: butterfly
+- 2: chicken
+- 3: cow
+- 4: dog
+- 5: elephant
+- 6: horse
+- 7: sheep
+- 8: spider
+- 9: squirrel
+
+# Results
+The results found below can be reproduced by changing the following parameters to the specified values and keeping the rest to default values:
+- trainPercent = 0.0
+- pathName = "testData"
+- resize = True
+- fileLoadName = "models/savedModel"
+- trainModel = False
+- loadModel = True
+
+After changing the parameters of the model to the above values and `main.py` is run, the following results will be outputted:
+<img width="400" alt="Test Image" src="https://github.com/gmongaras/ViTs_From_Scratch/blob/main/gitImages/testPic.png">
+
+Translating the numbers to classes, we find the following predictions:
+- elephant -> elephant
+- horse -> squirrel
+- cat -> cat
+- cow -> sheep
+- spider -> spider
+- dog -> spider
+- squirrel -> squirrel
+- butterfly -> butterfly
+- sheep -> cow
+- chicken -> chicken
+
+<b>Note: The model checkpoint was trained using the default parameters on my machine, which isn't too powerful. Since it was only using 1100 images for each class and it was trained for a couple of days, the model was unable to reach it's maximum potential. So, the results will likely be better be more images are used and the model is trianed for longer.</b>
+
+Since the images the model received are completely different from the dataset the model learned and the model wasn't trained to it's maximum potential, it is expected for it to make mistakes. Though, the mistakes made were not too large, since it classified more than half the images correct. 
