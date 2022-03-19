@@ -139,6 +139,7 @@ The results found below can be reproduced by changing the following parameters t
 - loadModel = True
 
 After changing the parameters of the model to the above values and `main.py` is run, the following results will be outputted:
+
 <img width="400" alt="Test Image" src="https://github.com/gmongaras/ViTs_From_Scratch/blob/main/gitImages/testPic.png">
 
 Translating the numbers to classes, we find the following predictions:
