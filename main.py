@@ -1,5 +1,4 @@
 from ViT import ViT
-import matplotlib.pyplot as plt
 import numpy as np
 import os
 from PIL import Image
@@ -10,7 +9,7 @@ import random
 device = torch.device('cpu')
 if torch.cuda.is_available():
     device = torch.device('cuda')
-torch.autograd.set_detect_anomaly(True)
+#torch.autograd.set_detect_anomaly(True)
 
 
 
