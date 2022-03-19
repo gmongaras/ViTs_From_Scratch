@@ -142,6 +142,8 @@ After changing the parameters of the model to the above values and `main.py` is 
 
 <img width="400" alt="Test Image" src="https://github.com/gmongaras/ViTs_From_Scratch/blob/main/gitImages/testPic.png">
 
+To play around with the model, you can add images to the testData directory. I added a picture of a shark which the model has never seen before. If the class is unknown, the label will be "other". In this case, the shark was classified as a butterfly.
+
 <b>Note: The model checkpoint was trained using the default parameters on my machine, which isn't too powerful. Since it was only using 1100 images for each class and it was trained for a couple of days, the model was unable to reach it's maximum potential. So, the results will likely be better be more images are used and the model is trianed for longer.</b>
 
 Since the images the model received are completely different from the dataset the model learned and the model wasn't trained to it's maximum potential, it is expected for it to make mistakes. Though, the mistakes made were not too large, since it classified more than half the images correct. 
