@@ -40,3 +40,52 @@ Additionally, I used `Python 3.8.10` when testing the model.
 To execute this project, download the repository and use the following command to run the project:
 
 `python3 main.py`
+
+## Model Parameters
+There are many parameters that can be tuned in the model, the parameters can be found at the beginning of the main function in `main.py`. Please note that the larger the keys, values, pathWidth, etc., the more memory the model will require to train.
+
+Below is a description of each parameter:
+
+#### Hyperparameters
+Hyperparameters used to tune the model
+- patchWidth (16 pixels) - The width of each image patch
+- pathHeight (16 pixels) - The height of each image patch
+- numSteps (1000 steps) - The number of steps to train the model for
+- batchSize (75 images) - The number of images in each minibatch
+- numBlocks (8 blocks) - The number of blocks used in the transformer encoder
+- numHeads (8 heads) - The number of heads to use for each multi-head attention block
+- keySize (16 parameters) - The size of each key matrix to use in each self-attention block
+- querySize (16 parameters) - The size of each query matrix to use in each self-attention block
+- valueSize (16 parameters) - The size of each value matrix to use in each self-attention block
+- hiddenSize (768 parametes) - The size of each matrix used in the multi-head attention blocks to convert the multi-head attention to a shape of the same size as the input encodings.
+- trainPercent (90 percent) - The percent of data that will be train data (1-trainPercent will be test data)
+- warmupSteps (10000 steps) - The number of warmup steps which is a value used in the optimizer
+- numClasses (10 classes) - The total number of classes the classifier can choose from
+
+#### Other parameters
+Other parameters used before training
+- pathName ("data") - The location of the directory to load images from
+- numImages (1100) - The number of images to load from each class (instead of loading all data, this parameter will load 'numImages' number of images from each class)
+  - Note: Use -1 to load all images
+- imgWidth (256) - The width of each input image (or the desired with of each input image)
+- imgHeight (256) - The height of each input image (or the desired height of each input image)
+- resize (False) - If this flag is True, the script will reize all images using the imgWidth and imgHeight parameters before training. So, if the input images are not of the same size, this flag will be useful to resize the images before training automatically
+
+#### Saving parameters
+Parameters used to save the model
+- fileSaveName ("models/modelCkPt") - The file to save model checkpoints to
+- fileLoadName ("models/savedModel") - The file to load a model from, if the loadModel flag is set to True
+- stepsToSave (2) - Number of steps before saving a checkpoint of the model
+- saveAtBest (True) - If the flag is set to True, the model will be saved only if it has a lower loss at the next save step. Otherwise, it will always save at each save step
+- newName (True) - Use a different name for each model checkpoint. The step which the model was saved will be appended to the end of the name of the file specified in the fileSaveName parameter
+
+#### Model Run Modes
+Different modes to run the model
+- trainModel (True) - If True, the model is trained, otherwise the model is not trained
+- loadModel (False) - If True, a model is loaded from the path specified by the fileLoadName parameter, otherwise the model is initialized to a random model
+- shuffleData (True) - If True, the data is shuffled before created the test-train split (helps the model perform better)
+- shuffleDuringTrain (True) - If True, the data is shuffled before sending it through the model (help the model learn better)
+
+
+## Training the Model
+To train the model, set the
