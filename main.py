@@ -27,7 +27,7 @@ def main():
     hiddenSize = 768            # Size of the hidden Linear layer
     trainPercent = 0.90         # Percent of data that should be train data
     warmupSteps = 10000         # Nuber of warmup steps when changing the learning rate of the model
-    numClasses = 10             # Number of classes for the newtork to predict
+    numClasses = 11             # Number of classes for the newtork to predict
     
     
     # Other parameters
@@ -63,8 +63,11 @@ def main():
     # Holds all the images
     images = []
     
-    # Dictionary to convert the classes to a number
-    classToNum = {"cat": 0, "butterfly": 1, "chicken": 2, "cow": 3, "dog": 4, "elephant": 5, "horse": 6, "sheep": 7, "spider": 8, "squirrel": 9}
+    # Dictionary to convert the classes to a number and vice versa
+    classToNum = {"cat": 0, "butterfly": 1, "chicken": 2, "cow": 3, "dog": 4,
+                  "elephant": 5, "horse": 6, "sheep": 7, "spider": 8,
+                  "squirrel": 9, "other": 10}
+    NumToClass = {v: k for k, v in classToNum.items()}
     
     # Holds all image labels
     labels = []
@@ -105,7 +108,10 @@ def main():
             images.append(img)
             
             # Store the image label in the list of image labels
-            labels.append(classToNum[path])
+            try:
+                labels.append(classToNum[path])
+            except:
+                labels.append(classToNum["other"])
             
             # Increase the image count
             imgCt += 1
@@ -150,11 +156,20 @@ def main():
     
     
     # Get a prediction on the test data
-    preds, loss = model.forward(testX, testY)
+    preds = model.forward(testX)
     print(f"Predictions: {preds}")
     print(f"Labels:      {testY.detach().cpu().numpy()}")
-    print(f"Loss: {loss}")
     print(f"Diff: {np.sum(np.abs(preds-testY.detach().cpu().numpy()))}")
+    print("Correct:")
+    for i in range(0, len(preds)):
+        if testY[i].item() == preds[i].item():
+            print(f"Label: {NumToClass[testY[i].item()]}, Pred: {NumToClass[preds[i].item()]})")
+    print("\nIncorrect:")
+    for i in range(0, len(preds)):
+        if testY[i].item() != preds[i].item():
+            print(f"Label: {NumToClass[testY[i].item()]}, Pred: {NumToClass[preds[i].item()]})")
+    input()
+
 
 
 
