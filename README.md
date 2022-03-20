@@ -132,6 +132,7 @@ While the model is training or testing, the output will be in numerical form. Ea
 # Results
 The results found below can be reproduced by changing the following parameters to the specified values and keeping the rest to default values:
 - trainPercent = 0.0
+- numClasses = 10
 - pathName = "testData"
 - resize = True
 - fileLoadName = "models/savedModel"
