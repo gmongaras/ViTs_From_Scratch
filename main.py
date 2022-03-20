@@ -168,7 +168,6 @@ def main():
     for i in range(0, len(preds)):
         if testY[i].item() != preds[i].item():
             print(f"Label: {NumToClass[testY[i].item()]}, Pred: {NumToClass[preds[i].item()]})")
-    input()
 
 
 
